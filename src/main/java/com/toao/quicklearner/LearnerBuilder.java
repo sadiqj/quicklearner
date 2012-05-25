@@ -102,9 +102,9 @@ public class LearnerBuilder
 				tries++;
 				Example example = testExamples.get(i);
 
-				String probClass = learner.classify(example.getFeatures());
+				String probLabel = learner.classify(example.getFeatures());
 
-				if (probClass == example.getLabel())
+				if (probLabel == example.getLabel())
 				{
 					correct++;
 				}

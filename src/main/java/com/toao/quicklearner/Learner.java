@@ -14,7 +14,7 @@ import com.google.common.collect.Maps;
 public class Learner
 {
 	private static Logger sLogger = LoggerFactory.getLogger(Learner.class);
-	private final List<String> classes;
+	private final List<String> labels;
 	private final List<InternalLearner> internalLearners;
 	private final double accuracy;
 
@@ -24,7 +24,7 @@ public class Learner
 		// Classes must be size 2 or greater
 		// Internal learners must be 1 if classes.size is 2 otherwise must be equal to classes in size
 		this.internalLearners = ImmutableList.copyOf(internalLearners);
-		this.classes = ImmutableList.copyOf(classes);
+		this.labels = ImmutableList.copyOf(classes);
 	}
 
 	private Map<String,Double> mapFromSet(Set<String> features)
@@ -46,53 +46,53 @@ public class Learner
 	
 	public String classify(Map<String, Double> features)
 	{
-		Map<String, Double> classProbs = getClassProbabilities(features);
+		Map<String, Double> classProbs = getLabelProbabilities(features);
 		
 		double bestProb = Double.MIN_VALUE;
-		String bestClass = null;
+		String bestLabel = null;
 				
 		for( Entry<String, Double> e : classProbs.entrySet() )
 		{
-			String className = e.getKey();
-			double classProb = e.getValue();
+			String labelName = e.getKey();
+			double labelProb = e.getValue();
 			
-			if( classProb > bestProb )
+			if( labelProb > bestProb )
 			{
-				bestClass = className;
-				bestProb = classProb;
+				bestLabel = labelName;
+				bestProb = labelProb;
 			}
 		}
 		
-		return bestClass;
+		return bestLabel;
 	}
 	
-	public Map<String,Double> getClassProbabilities(Map<String,Double> features)
+	public Map<String,Double> getLabelProbabilities(Map<String,Double> features)
 	{
-		Map<String,Double> classProbs = Maps.newHashMap();
+		Map<String,Double> labelProbs = Maps.newHashMap();
 
-		if( classes.size() == 2 )
+		if( labels.size() == 2 )
 		{
 			InternalLearner learner = internalLearners.get(0);
 			
 			double prob = learner.classify(features);
 
-			classProbs.put(classes.get(1), prob);
-			classProbs.put(classes.get(0), 1.0 - prob);
+			labelProbs.put(labels.get(1), prob);
+			labelProbs.put(labels.get(0), 1.0 - prob);
 		}
 		else
 		{
-			for( int c = 0; c < classes.size() ; c++ )
+			for( int c = 0; c < labels.size() ; c++ )
 			{
-				String currentClass = classes.get(c);
+				String currentLabel = labels.get(c);
 				InternalLearner learner = internalLearners.get(c);
 				
-				double classProb = learner.classify(features);
+				double labelProb = learner.classify(features);
 				
-				classProbs.put(currentClass, classProb);
+				labelProbs.put(currentLabel, labelProb);
 			}
 		}
 		
-		return classProbs;
+		return labelProbs;
 	}
 	
 	public static LearnerBuilder builder()
