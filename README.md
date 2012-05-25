@@ -21,7 +21,7 @@ You create a Learner instance as follows:
 
     String label = learner.classify(.. Map<String,Double> or Set<String> of features ..);
 
-The features used for training can be sets of Strings (used to indicate whether a feature is present or not.. this works well for textual classification) or a map of String-Double entries.
+Once built, a Learner is immutable and is thread-safe. The features used for training can be sets of Strings (used to indicate whether a feature is present or not.. this works well for textual classification) or a map of String-Double entries.
 
 The Learner instance also has another method getLabelProbabilities which returns all of the available labels and their probabilities. In addition, during the training phase, a cross validation is carried out on the Learner and the resulting accuracy is avaiable with the getAccuracy getter on the Learner instance.
 
