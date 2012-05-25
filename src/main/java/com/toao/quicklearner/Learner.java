@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import static com.google.common.base.Preconditions.*;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +20,15 @@ public class Learner
 	private final List<InternalLearner> internalLearners;
 	private final double accuracy;
 
-	protected Learner(List<InternalLearner> internalLearners, List<String> classes, double accuracy)
+	protected Learner(List<InternalLearner> internalLearners, List<String> labels, double accuracy)
 	{
 		this.accuracy = accuracy;
-		// Classes must be size 2 or greater
-		// Internal learners must be 1 if classes.size is 2 otherwise must be equal to classes in size
+		checkNotNull(internalLearners);
+		checkNotNull(labels);
+		checkArgument(labels.size() >= 2, "Must be two or more labels.");
+		checkArgument((labels.size() == 2 && internalLearners.size() == 1) || (labels.size() > 2 && internalLearners.size() == labels.size()), "Multi-label classification requires one learner per label");
 		this.internalLearners = ImmutableList.copyOf(internalLearners);
-		this.labels = ImmutableList.copyOf(classes);
+		this.labels = ImmutableList.copyOf(labels);
 	}
 
 	private Map<String,Double> mapFromSet(Set<String> features)
