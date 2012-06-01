@@ -1,0 +1,28 @@
+package com.toao.quicklearner.persistence;
+
+message Model
+{
+    enum LearnerType
+    {
+        LOGISTIC = 0;
+    }
+
+    required LearnerType learnerType = 1;
+
+    message Logistic
+    {
+        message InternalLogistic 
+        {
+            repeated string feature = 1;
+            repeated double omega = 2;
+            repeated double mean = 3;
+            repeated double stdDev = 4; 
+        }
+
+        repeated InternalLogistic internals = 1;
+        repeated string labels = 2;
+        optional double accuracy = 3;
+    }
+
+    optional Logistic logistic = 2;
+}

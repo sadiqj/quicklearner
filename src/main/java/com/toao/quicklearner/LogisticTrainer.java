@@ -13,11 +13,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
-public class InternalTrainer
+public class LogisticTrainer
 {
-	private static Logger sLogger = LoggerFactory.getLogger(InternalTrainer.class);
+	private static Logger sLogger = LoggerFactory.getLogger(LogisticTrainer.class);
 	
-	protected InternalLearner learn(double regulariser, double learningRate, String positiveLabel, List<Example> examples)
+	protected LogisticInternalLearner learn(double regulariser, double learningRate, String positiveLabel, List<Example> examples)
 	{
 		sLogger.debug("build - called with positive label: {}", positiveLabel);
 
@@ -180,6 +180,6 @@ public class InternalTrainer
 			featuresOmega.put(feature, currentOmega[idx]);
 		}
 		
-		return new InternalLearner(featuresOmega, featureMean, featureStdDev);
+		return new LogisticInternalLearner(featuresOmega, featureMean, featureStdDev);
 	}
 }

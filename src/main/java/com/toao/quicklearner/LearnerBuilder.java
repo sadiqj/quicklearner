@@ -17,11 +17,9 @@ public class LearnerBuilder
 
 	private List<Example> examples = Lists.newArrayList();
 
-	private int cvFolds = 10;
+	private final int cvFolds = 10;
 
-	private double learningRate = 0.01;
-
-	private double regulariser = 0.4;
+	private final double learningRate = 0.1;
 
 	protected LearnerBuilder addExample(String label, Map<String, Double> features)
 	{
@@ -43,26 +41,13 @@ public class LearnerBuilder
 		return this;
 	}
 
-	public LearnerBuilder setCVFolds(int cvFolds)
-	{
-		this.cvFolds = cvFolds;
-		return this;
-	}
-
-	public LearnerBuilder setLearningRate(double learningRate)
-	{
-		this.learningRate = learningRate;
-		return this;
-	}
-
-	public LearnerBuilder setRegularisation(double regulariser)
-	{
-		this.regulariser = regulariser;
-		return this;
-	}
-
 	public Learner build()
 	{
+		if( examples.size() < 1 )
+		{
+			throw new RuntimeException("There must be a least one training example provided.");
+		}
+		
 		// Find all the labels
 
 		Set<String> labelSet = Sets.newHashSet();
@@ -74,29 +59,89 @@ public class LearnerBuilder
 
 		List<String> labels = Lists.newArrayList(labelSet);
 
-		// First do cross validation
+		// We will split off a validation dataset of about 20% of the examples
+		List<Example> validation = Lists.newArrayList();
+		List<Example> trainingExamples = Lists.newArrayList();
+		
+		for( int c = 0; c < examples.size() ; c++ )
+		{
+			if( c % 5 == 0 )
+			{
+				validation.add( examples.get(c) );
+			}
+			else
+			{
+				trainingExamples.add( examples.get(c) );
+			}
+		}
+		
+		// Now we try to find the best regularisation parameter
+		double regulariser = 0.0;
+		double bestCost = Double.MAX_VALUE;
+		
+		for( int p = -6 ; p < 6 ; p++ )
+		{
+			double tmpReg = Math.pow(-2.0, p);
+			
+			double totalCost = 0.0;
+			
+			Learner learner = train(regulariser, learningRate, labels, trainingExamples, 0.0);
+			
+			double examples = validation.size();
+			
+			for (int i = 0; i < validation.size(); i++)
+			{
+				Example example = validation.get(i);
+
+				Map<String, Double> labelProbs = learner.getLabelProbabilities(example.getFeatures());
+				
+				for( String label : labelProbs.keySet() )
+				{
+					if( label.equals(example.getLabel()) )
+					{
+						totalCost -= Math.log(labelProbs.get(label)) / (4 * examples);
+					}
+					else
+					{
+						totalCost -= Math.log(1.0 - labelProbs.get(label)) / (4 * examples);
+					}
+				}
+			}
+			
+			sLogger.debug("build - total validation cost: {} for regularisation parameter: {}", totalCost, regulariser);
+			
+			if( totalCost < bestCost )
+			{
+				bestCost = totalCost;
+				regulariser = tmpReg;
+			}
+		}
+		
+		sLogger.debug("build - best regularisation parameter was: {}", regulariser);
+		
+		// Now do cross validation to estimate the learner's accuracy
 
 		int correct = 0;
 		int tries = 0;
 
 		for (int c = 0; c < cvFolds; c++)
 		{
-			List<Example> trainingExamples = Lists.newArrayList();
+			List<Example> cvTrainingExamples = Lists.newArrayList();
 			List<Example> testExamples = Lists.newArrayList();
 
-			for (int i = 0; i < examples.size(); i++)
+			for (int i = 0; i < trainingExamples.size(); i++)
 			{
 				if (i % cvFolds == c)
 				{
-					testExamples.add(examples.get(i));
+					testExamples.add(trainingExamples.get(i));
 				}
 				else
 				{
-					trainingExamples.add(examples.get(i));
+					cvTrainingExamples.add(trainingExamples.get(i));
 				}
 			}
 
-			Learner learner = train(regulariser, learningRate, labels, trainingExamples, 0.0);
+			Learner learner = train(regulariser, learningRate, labels, cvTrainingExamples, 0.0);
 
 			for (int i = 0; i < testExamples.size(); i++)
 			{
@@ -126,12 +171,13 @@ public class LearnerBuilder
 
 	private Learner train(double regulariser, double learningRate, List<String> labels, List<Example> trainingExamples, double accuracy)
 	{
-		InternalTrainer trainer = new InternalTrainer();
-		List<InternalLearner> internalLearners = Lists.newArrayList();
+		// We only do Logistic at the moment
+		LogisticTrainer trainer = new LogisticTrainer();
+		List<LogisticInternalLearner> internalLearners = Lists.newArrayList();
 
 		if (labels.size() == 2)
 		{
-			InternalLearner learn = trainer.learn(regulariser, learningRate, labels.get(1), trainingExamples);
+			LogisticInternalLearner learn = trainer.learn(regulariser, learningRate, labels.get(1), trainingExamples);
 
 			internalLearners.add(learn);
 		}
@@ -139,13 +185,13 @@ public class LearnerBuilder
 		{
 			for (int c = 0; c < labels.size(); c++)
 			{
-				InternalLearner internalLearner = trainer.learn(regulariser, learningRate, labels.get(c), trainingExamples);
+				LogisticInternalLearner internalLearner = trainer.learn(regulariser, learningRate, labels.get(c), trainingExamples);
 
 				internalLearners.add(internalLearner);
 			}
 		}
 
-		Learner learner = new Learner(internalLearners, labels, accuracy);
+		Learner learner = new LogisticLearner(internalLearners, labels, accuracy);
 
 		return learner;
 	}

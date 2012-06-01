@@ -14,13 +14,24 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>cobertura-maven-plugin</artifactId>
+        <version>2.5.1</version>
+        
+        <configuration>
+          <formats>
+            <format>xml</format>
+            <format>html</format>
+          </formats>
+        </configuration>
+      </plugin>
+    </plugins>
+  </reporting>
+
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-      <scope>test</scope>
-    </dependency>
     <dependency>
     	<groupId>com.google.guava</groupId>
     	<artifactId>guava</artifactId>
@@ -36,5 +47,34 @@
     	<artifactId>slf4j-log4j12</artifactId>
     	<version>1.6.4</version>
     </dependency>
+    <dependency>
+    	<groupId>junit</groupId>
+    	<artifactId>junit</artifactId>
+    	<version>4.9</version>
+    </dependency>
+    <dependency>
+    	<groupId>com.google.protobuf</groupId>
+    	<artifactId>protobuf-java</artifactId>
+    	<version>2.4.1</version>
+    </dependency>
   </dependencies>
+  
+  <build>
+  <plugins>
+  <plugin>
+    <groupId>org.pitest</groupId>
+    <artifactId>pitest-maven</artifactId>
+    <version>0.27</version>
+    <configuration>
+      <targetClasses>
+        <param>com.toao.quicklearner.*</param>
+      </targetClasses>
+      <targetTests>
+        <param>com.toao.quicklearner.Test*</param>
+      </targetTests>
+    </configuration>
+  </plugin>
+  
+  </plugins>
+  </build>
 </project>
