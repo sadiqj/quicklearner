@@ -27,8 +27,21 @@ The Learner instance also has another method getLabelProbabilities which returns
 
 The underlying learning algorithm is regularised logistic regression using batch gradient descent with feature normalisation. I may add an SVM implementation in the near future, though i've tried to keep the interface generic enough that switching things out shouldn't be a problem.
 
+Persistence
+-----------
+
+You can serialise the Learners to a byte array, which can then subsequently be used to recreate a Learner as follows:
+
+    byte[] bytes = learner.serialise();
+
+    .. store to disk/database ..
+
+    .. at some later time ..
+
+    Learner learner = Learner.load(bytes);
+
+
 TODO
 ----
 
-The highest priority thing on my list is actually serialisation of the Learners.
-
+There are a few tests that generate linearly separable test sets for two-class and multi-class classifiers as well as test serialisation/reloading but I plan on adding a suite of performance tests to watch for regressions in classification performance. 
